@@ -18,6 +18,9 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(express.json());
 
+// Routers
+app.use('/user', require('./routes/api/user'));
+
 
 mongoose.connection.once('open', () => {
   console.log('Connected to MongoDB');
