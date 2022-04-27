@@ -22,12 +22,22 @@ const login = async (req, res) => {
   }
 }
 
+const refreshToken = async (req, res) => {
+  if (!refreshTokens.includes(req.body.token)) res.status(400).send("Refresh Token Invalid")
+  refreshTokens = refreshTokens.filter( (c) => c != req.body.token)
+  //remove the old refreshToken from the refreshTokens list
+  const accessToken = generateAccessToken ({user: req.body.name})
+  const refreshToken = generateRefreshToken ({user: req.body.name})
+  //generate new accessToken and refreshTokens
+  res.json ({accessToken: accessToken, refreshToken: refreshToken})
+}
+
 const generateAccessToken = (userData) => {
   return jwt.sign(userData, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"}) 
 }
 
 const generateRefreshToken = (userData) => {
-  return jwt.sign(userData, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "15m"}) 
+  return jwt.sign(userData, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "20m"}) 
 }
 
 module.exports = { login };
