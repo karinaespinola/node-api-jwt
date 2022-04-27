@@ -9,13 +9,13 @@ const login = async (req, res) => {
       res.status(404).send({"message": "User not found"});
     }
 
-    if (! await bcrypt.compare(req.body.password, user[0].password)) {
+    if (! await bcrypt.compare(req.body.password, user[0].hashedPassword)) {
       res.status(401).send({"message": "The password doesn't match!"});
     }
 
     const accessToken = generateAccessToken ({username: req.body.name})
     const refreshToken = generateRefreshToken ({username: req.body.name})
-    res.json ({accessToken: accessToken, refreshToken: refreshToken})
+    res.json({accessToken: accessToken, refreshToken: refreshToken})
 
   } catch (error) {
     res.status(500).send({"message": "There was an error. This is what we know: " + error})
