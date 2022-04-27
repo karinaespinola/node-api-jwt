@@ -21,6 +21,8 @@ app.use(express.json());
 // Routers
 app.use('/user', require('./routes/api/user'));
 
+app.use('/auth', require('./routes/api/auth'));
+
 
 mongoose.connection.once('open', () => {
   console.log('Connected to MongoDB');
