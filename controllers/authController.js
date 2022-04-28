@@ -33,16 +33,30 @@ const refreshToken = async (req, res) => {
     if(!result) {
       res.status(403).send({"message": "The refresh token is not valid!"});
     }
+    //generate new accessToken and refreshTokens
     const accessToken = generateAccessToken ({user: req.body.name})
     const refreshToken = generateRefreshToken ({user: req.body.name})
-    // Save new refresh token to the database4
+    // Save new refresh token to the database
     saveRefreshToken(refreshToken);
-    //generate new accessToken and refreshTokens
     res.json ({accessToken: accessToken, refreshToken: refreshToken})
   } catch (error) {
     res.status(500).send({"message": "There was an error while generating the refresh token. This is what we know: " + error});
   }
+}
 
+const logout = async (req, res) => {
+  try {
+    if(!req.body.token) {
+      res.status(403).send({"message": "No token found!"});
+    }
+    // Remove the old refreshToken from the refreshTokens list
+    const result = deleteRefreshToken(req.body.token);
+    if(!result) {
+      res.status(403).send({"message": "The refresh token is not valid!"});
+    }
+  } catch (error) {
+    res.status(500).send({"message": "There was an error while deleting the token from the database. This is what we know: " + error});
+  }
 }
 
 const generateAccessToken = (userData) => {
@@ -76,4 +90,4 @@ const deleteRefreshToken = async (tokenToRemove) => {
   return true;
 }
 
-module.exports = { login, refreshToken };
+module.exports = { login, refreshToken, logout };
