@@ -7,11 +7,11 @@ const login = async (req, res) => {
   try {
     const user = await User.find({ name: req.body.name }).exec();
     if(user.length === 0) {
-      res.status(404).send({"message": "User not found"});
+     return res.status(404).json({"message": "User not found"});
     }
 
     if (! await bcrypt.compare(req.body.password, user[0].hashedPassword)) {
-      res.status(401).send({"message": "The password doesn't match!"});
+     return res.status(401).json({"message": "The password doesn't match!"});
     }
 
     const accessToken = generateAccessToken ({username: req.body.name})
@@ -19,43 +19,44 @@ const login = async (req, res) => {
     res.json({accessToken: accessToken, refreshToken: refreshToken})
 
   } catch (error) {
-    res.status(500).send({"message": "There was an error. This is what we know: " + error})
+   return res.status(500).json({"message": "There was an error. This is what we know: " + error})
   }
 }
 
 const refreshToken = async (req, res) => {
   try {
     if(!req.body.token) {
-      res.status(403).send({"message": "No token found!"});
+     return res.status(403).json({"message": "No token found!"});
     }
     // Remove the old refreshToken from the refreshTokens list
     const result = deleteRefreshToken(req.body.token);
     if(!result) {
-      res.status(403).send({"message": "The refresh token is not valid!"});
+     return res.status(403).json({"message": "The refresh token is not valid!"});
     }
     //generate new accessToken and refreshTokens
     const accessToken = generateAccessToken ({user: req.body.name})
     const refreshToken = generateRefreshToken ({user: req.body.name})
     // Save new refresh token to the database
     saveRefreshToken(refreshToken);
-    res.json ({accessToken: accessToken, refreshToken: refreshToken})
+    res.json({accessToken: accessToken, refreshToken: refreshToken})
   } catch (error) {
-    res.status(500).send({"message": "There was an error while generating the refresh token. This is what we know: " + error});
+   return res.status(500).json({"message": "There was an error while generating the refresh token. This is what we know: " + error});
   }
 }
 
 const logout = async (req, res) => {
   try {
     if(!req.body.token) {
-      res.status(403).send({"message": "No token found!"});
+     return res.status(403).json({"message": "No token found!"});
     }
     // Remove the old refreshToken from the refreshTokens list
     const result = deleteRefreshToken(req.body.token);
     if(!result) {
-      res.status(403).send({"message": "The refresh token is not valid!"});
+     return res.status(403).json({"message": "The refresh token is not valid!"});
     }
+   return res.status(204).json({"message": "Logged out!"});
   } catch (error) {
-    res.status(500).send({"message": "There was an error while deleting the token from the database. This is what we know: " + error});
+   return res.status(500).json({"message": "There was an error while deleting the token from the database. This is what we know: " + error});
   }
 }
 
