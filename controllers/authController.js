@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const RefreshToken = require('../models/RefreshToken');
 const bcrypt = require('bcrypt');
 
 const login = async (req, res) => {
@@ -23,13 +24,25 @@ const login = async (req, res) => {
 }
 
 const refreshToken = async (req, res) => {
-  if (!refreshTokens.includes(req.body.token)) res.status(400).send("Refresh Token Invalid")
-  refreshTokens = refreshTokens.filter( (c) => c != req.body.token)
-  //remove the old refreshToken from the refreshTokens list
-  const accessToken = generateAccessToken ({user: req.body.name})
-  const refreshToken = generateRefreshToken ({user: req.body.name})
-  //generate new accessToken and refreshTokens
-  res.json ({accessToken: accessToken, refreshToken: refreshToken})
+  try {
+    if(!req.body.token) {
+      res.status(403).send({"message": "No token found!"});
+    }
+    // Remove the old refreshToken from the refreshTokens list
+    const result = deleteRefreshToken(req.body.token);
+    if(!result) {
+      res.status(403).send({"message": "The refresh token is not valid!"});
+    }
+    const accessToken = generateAccessToken ({user: req.body.name})
+    const refreshToken = generateRefreshToken ({user: req.body.name})
+    // Save new refresh token to the database4
+    saveRefreshToken(refreshToken);
+    //generate new accessToken and refreshTokens
+    res.json ({accessToken: accessToken, refreshToken: refreshToken})
+  } catch (error) {
+    res.status(500).send({"message": "There was an error while generating the refresh token. This is what we know: " + error});
+  }
+
 }
 
 const generateAccessToken = (userData) => {
@@ -40,4 +53,27 @@ const generateRefreshToken = (userData) => {
   return jwt.sign(userData, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "20m"}) 
 }
 
-module.exports = { login };
+const saveRefreshToken = async (newRefreshToken) => {
+  try {
+    await RefreshToken.create({
+      "token": newRefreshToken
+    });
+    return true;
+  } catch (error) {
+    throw new Error("There was an error while saving the refresh token to the database. This is what we know: " + error);
+  }
+}
+
+const deleteRefreshToken = async (tokenToRemove) => {
+  try {
+    const result = await RefreshToken.deleteOne({ token: tokenToRemove });
+    if(result.deletedCount !== 1) {
+      return false;
+    }
+  } catch (error) {
+    throw new Error("There was an error while deleting the refresh token from the database. This is what we know: " + error);
+  }
+  return true;
+}
+
+module.exports = { login, refreshToken };

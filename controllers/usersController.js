@@ -5,7 +5,7 @@ const create = async (req, res) => {
   try {
     const name = req.body.name;
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    User.create({
+    await User.create({
       name,
       hashedPassword
     });
