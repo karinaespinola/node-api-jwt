@@ -20,6 +20,7 @@ const validateToken = (req, res, next) => {
         return;
       }
       else {
+        console.log(user);
         req.user = user
         next() //proceed to the next action in the calling function
      }

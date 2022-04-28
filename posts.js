@@ -11,7 +11,7 @@ const ErrorHandler = require('./middleware/ErrorHandler');
 app.get("/posts", validateToken, (req, res, next)=>{
   console.log("Token is valid")
   console.log(req.user.user)
-  res.send(`${req.user.user} successfully accessed post`);
+  res.send(`${req.user.username} successfully accessed post`);
 });
 
 app.use(ErrorHandler);
