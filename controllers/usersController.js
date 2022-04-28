@@ -9,9 +9,9 @@ const create = async (req, res) => {
       name,
       hashedPassword
     });
-    res.status(201).send({"message": "User added successfully!"});
+    return res.status(201).json({"message": "User added successfully!"});
   } catch (error) {
-    res.status(500).send({"message": "There was an error. This is what we know:" + error});
+    return res.status(500).json({"message": "There was an error. This is what we know:" + error});
   }
 
 }
