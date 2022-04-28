@@ -5,6 +5,7 @@ const PORT = process.env.PORT;
 const mongoose = require('mongoose');
 const connectDB = require('./config/database');
 const cors = require('cors');
+const apiErrorHandler = require('./middleware/ErrorHandler');
 
 // Connect to MongoDB
 connectDB();
@@ -23,6 +24,7 @@ app.use('/user', require('./routes/api/user'));
 
 app.use('/auth', require('./routes/api/auth'));
 
+app.use(apiErrorHandler);
 
 mongoose.connection.once('open', () => {
   console.log('Connected to MongoDB');

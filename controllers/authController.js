@@ -2,8 +2,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const bcrypt = require('bcrypt');
+const ApiError = require('../middleware/ApiError');
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const user = await User.find({ name: req.body.name }).exec();
     if(user.length === 0) {
@@ -19,19 +20,22 @@ const login = async (req, res) => {
     res.json({accessToken: accessToken, refreshToken: refreshToken})
 
   } catch (error) {
-   return res.status(500).json({"message": "There was an error. This is what we know: " + error})
+    next(ApiError.badRequest(500, "There was an error. This is what we know: " + error));
+    return;  
   }
 }
 
-const refreshToken = async (req, res) => {
+const refreshToken = async (req, res, next) => {
   try {
     if(!req.body.token) {
-     return res.status(403).json({"message": "No token found!"});
+     next(ApiError.badRequest(403, "No token found!"));
+    return;    
     }
     // Remove the old refreshToken from the refreshTokens list
     const result = deleteRefreshToken(req.body.token);
     if(!result) {
-     return res.status(403).json({"message": "The refresh token is not valid!"});
+     next(ApiError.badRequest(403, "The refresh token is not valid!"));
+    return;    
     }
     //generate new accessToken and refreshTokens
     const accessToken = generateAccessToken ({user: req.body.name})
@@ -40,23 +44,27 @@ const refreshToken = async (req, res) => {
     saveRefreshToken(refreshToken);
     res.json({accessToken: accessToken, refreshToken: refreshToken})
   } catch (error) {
-   return res.status(500).json({"message": "There was an error while generating the refresh token. This is what we know: " + error});
+   next(ApiError.badRequest(403, "There was an error while generating the refresh token. This is what we know: " + error));
+    return;  
   }
 }
 
-const logout = async (req, res) => {
+const logout = async (req, res, next) => {
   try {
     if(!req.body.token) {
-     return res.status(403).json({"message": "No token found!"});
+     next(ApiError.badRequest(403, "No token found!"));
+    return;    
     }
     // Remove the old refreshToken from the refreshTokens list
     const result = deleteRefreshToken(req.body.token);
     if(!result) {
-     return res.status(403).json({"message": "The refresh token is not valid!"});
+     next(ApiError.badRequest(403, "The refresh token is not valid!"));
+    return;    
     }
    return res.status(204).json({"message": "Logged out!"});
   } catch (error) {
-   return res.status(500).json({"message": "There was an error while deleting the token from the database. This is what we know: " + error});
+   next(ApiError.badRequest(500, "There was an error while deleting the token from the database. This is what we know: " + error));
+    return;  
   }
 }
 
@@ -75,7 +83,8 @@ const saveRefreshToken = async (newRefreshToken) => {
     });
     return true;
   } catch (error) {
-    throw new Error("There was an error while saving the refresh token to the database. This is what we know: " + error);
+    next(ApiError.badRequest(500, "There was an error while saving the refresh token to the database. This is what we know: " + error));
+    return;  
   }
 }
 
@@ -86,7 +95,8 @@ const deleteRefreshToken = async (tokenToRemove) => {
       return false;
     }
   } catch (error) {
-    throw new Error("There was an error while deleting the refresh token from the database. This is what we know: " + error);
+    next(ApiError.badRequest(500, "There was an error while deleting the refresh token from the database. This is what we know: " + error));
+    return;  
   }
   return true;
 }

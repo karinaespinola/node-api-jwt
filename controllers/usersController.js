@@ -1,7 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const ApiError = require('../middleware/ApiError');
 
-const create = async (req, res) => {
+const create = async (req, res, next) => {
   try {
     const name = req.body.name;
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
@@ -11,7 +12,8 @@ const create = async (req, res) => {
     });
     return res.status(201).json({"message": "User added successfully!"});
   } catch (error) {
-    return res.status(500).json({"message": "There was an error. This is what we know:" + error});
+    next(ApiError.badRequest(500, "There was an error. This is what we know:" + error));
+    return;
   }
 
 }
